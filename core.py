@@ -32,7 +32,6 @@ def parse_flight_number(flight_number: str) -> str:
 
 def get_flight_for_date(flight_number: str, date: str) -> dict:
     flight_info = f.get_flight_for_date(flight_number, date)
-    print(flight_info)
     return flight_info
 
 
