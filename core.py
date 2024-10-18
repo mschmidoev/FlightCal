@@ -27,7 +27,7 @@ def parse_date(date: str) -> str:
 
 
 def parse_flight_number(flight_number: str) -> str:
-    return ''.join(filter(str.isalnum, flight_number.upper()))
+    return "".join(filter(str.isalnum, flight_number.upper()))
 
 
 def get_flight_for_date(flight_number: str, date: str) -> dict:
