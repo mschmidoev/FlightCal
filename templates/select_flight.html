@@ -18,7 +18,13 @@
         h1 {
             margin-bottom: 20px;
         }
-        form {
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .card {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,19 +32,20 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
         }
         label {
             margin: 10px 0 5px;
             font-weight: bold;
         }
-        input[type="text"], input[type="date"] {
+        .card input[type="text"], .card input[type="date"] {
             padding: 10px;
             width: 200px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        input[type="submit"] {
+        .card input[type="submit"] {
             margin-top: 20px;
             padding: 10px 20px;
             border: none;
@@ -49,7 +56,7 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        input[type="submit"]:hover {
+        .card input[type="submit"]:hover {
             background-color: #0056b3;
         }
         .emoji {
@@ -59,6 +66,20 @@
         }
         .emoji.clicked {
             transform: rotate(360deg);
+        }
+        .restart-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .restart-button:hover {
+            background-color: #218838;
         }
         footer {
             margin-top: 20px;
@@ -76,26 +97,35 @@
 </head>
 <body>
     <div class="emoji">✈️</div>
-    <h1>Create Flight Calendar Event</h1>
-    <p>Enter your flight number and date to create an iCal event.</p>
-    <form action="/create_event" method="post">
-        <label for="flight_number">Flight Number:</label>
-        <input type="text" id="flight_number" name="flight_number" required><br><br>
-        
-        <label for="flight_date">Flight Date:</label>
-        <input type="date" id="flight_date" name="flight_date" required><br><br>
-        
-        <input type="submit" value="Create Event">
-    </form>
+    <h1>Available Flights</h1>
+    <div class="card-container">
+        {% for flight in flights %}
+        <div class="card">
+            <h2>{{ flight.flight_number }}</h2>
+            <p>Airline: {{ flight.airline_name }}</p>
+            <p>Departure: {{ flight.scheduled_departure }}</p>
+            <p>Arrival: {{ flight.scheduled_arrival }}</p>
+            <p>From: {{ flight.origin_airport_code }}</p>
+            <p>To: {{ flight.destination_airport_code }}</p>
+            <!-- Move the form inside the card -->
+            <form action="/create_event/{{ loop.index0 }}" method="post">
+                <input type="hidden" name="flight_number" value="{{ flight.flight_number }}">
+                <input type="hidden" name="flight_date" value="{{ flight.scheduled_departure }}">
+                <input type="submit" value="Create Event">
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    <button class="restart-button" onclick="window.location.href='/'">Restart</button>
     <footer>
         Don't miss your flight! 🛫<br>
         Contribute to this project on <a href="https://github.com/mschmidoev/FlightCal" target="_blank">GitHub</a><br>
         Made with ❤️ by <a href="https://mschm.id" target="_blank">Michael Schmid</a>
     </footer>
-<script>
-    document.querySelector('.emoji').addEventListener('click', function() {
-        this.classList.toggle('clicked');
-    });
-</script>
+    <script>
+        document.querySelector('.emoji').addEventListener('click', function() {
+            this.classList.toggle('clicked');
+        });
+    </script>
 </body>
-</html>
+</html></form>
