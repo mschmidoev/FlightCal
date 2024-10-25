@@ -1,16 +1,17 @@
 import io
+import re
 from datetime import datetime, timedelta
 
-import pandas as pd
 import icalendar
+import pandas as pd
 from pyflightdata import FlightData
 from pytz import timezone
 
 f = FlightData()
 
 # test_config
-# flight_number = "EW9464"
-# date = "2024-12-20"
+# flight_number = "SQ327"
+# date = "2024-10-23"
 
 
 def make_ics_from_selected_df_index(df: pd.DataFrame, index: int) -> bytes:
@@ -25,12 +26,19 @@ def get_flight(flight_number: str, date: str) -> pd.DataFrame:
     date = parse_date(date)
     flight_info = find_flights_with_date(flight_number, date)
     if not flight_info:
-        flight_info = find_flight_no_date(flight_number)
+        try:
+            flight_info = find_flight_no_date(flight_number)
+        except Exception:
+            raise ValueError(
+                f"No flight information found for flight number {flight_number}."
+            )
         flight_info = drop_ununique_flights(flight_info)
         df = pd.DataFrame(
             [parse_flight_info(flight_info, i) for i in range(len(flight_info))]
         )
         df["is_guess"] = True
+        df = update_df_timezones(df)
+        df = parse_nice_datetime(df)
         for i in range(len(df)):
             df.loc[i] = move_flight_date(df.loc[i], date)
         return df
@@ -40,11 +48,38 @@ def get_flight(flight_number: str, date: str) -> pd.DataFrame:
                 [parse_flight_info(flight_info, i) for i in range(len(flight_info))]
             )
             df["is_guess"] = False
+            df = update_df_timezones(df)
+            df = parse_nice_datetime(df)
             return df
         else:
             df = pd.DataFrame([parse_flight_info(flight_info, 0)])
             df["is_guess"] = False
+            df = update_df_timezones(df)
+            df = parse_nice_datetime(df)
             return df
+
+
+def update_df_timezones(df: pd.DataFrame) -> pd.DataFrame:
+    for i in range(len(df)):
+        origin_tz = timezone(df.loc[i]["origin_timezone"])
+        destination_tz = timezone(df.loc[i]["destination_timezone"])
+
+        # Convert scheduled departure and arrival from UK time to origin and destination timezones
+        uk_tz = timezone("Europe/London")
+        scheduled_departure_uk = uk_tz.localize(
+            datetime.strptime(df.loc[i]["scheduled_departure"], "%Y%m%d %H%M")
+        )
+        scheduled_arrival_uk = uk_tz.localize(
+            datetime.strptime(df.loc[i]["scheduled_arrival"], "%Y%m%d %H%M")
+        )
+
+        df.at[i, "scheduled_departure"] = scheduled_departure_uk.astimezone(
+            origin_tz
+        ).strftime("%Y%m%d %H%M")
+        df.at[i, "scheduled_arrival"] = scheduled_arrival_uk.astimezone(
+            destination_tz
+        ).strftime("%Y%m%d %H%M")
+    return df
 
 
 def parse_flight_info(flight_info: dict, chosen_flight_index: int) -> dict:
@@ -85,8 +120,22 @@ def parse_date(date: str) -> str:
     return datetime.strptime(date, "%Y-%m-%d").strftime("%Y%m%d")
 
 
+def parse_nice_datetime(df: pd.DataFrame) -> pd.DataFrame:
+    df["nice_departure_date"] = df["scheduled_departure"].apply(
+        lambda x: datetime.strptime(x, "%Y%m%d %H%M").strftime("%Y-%m-%d %H:%M")
+    )
+    df["nice_arrival_date"] = df["scheduled_arrival"].apply(
+        lambda x: datetime.strptime(x, "%Y%m%d %H%M").strftime("%Y-%m-%d %H:%M")
+    )
+    return df
+
+
 def parse_flight_number(flight_number: str) -> str:
-    return "".join(filter(str.isalnum, flight_number.upper()))
+    match = re.match(r"([A-Z]+)([0-9]+)", flight_number.upper())
+    if match:
+        letters, numbers = match.groups()
+        return letters + numbers.lstrip("0")
+    return flight_number
 
 
 def ics_to_bytes(ics: icalendar.Event) -> bytes:
@@ -158,9 +207,7 @@ def make_ical_event(data: dict):
         f'{data["destination_airport_code"]} {data["flight_number"]}',
     )
     origin_tz = timezone(data["origin_timezone"])
-    destination_tz = timezone(
-        data["destination_timezone"]
-    )  # todo: I think it's doing timezones wrong
+    destination_tz = timezone(data["destination_timezone"])
 
     dtstart = origin_tz.localize(
         datetime.strptime(data["scheduled_departure"], "%Y%m%d %H%M")

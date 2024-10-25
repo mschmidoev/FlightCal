@@ -18,6 +18,18 @@
         h1 {
             margin-bottom: 20px;
         }
+        .error-message {
+            color: #ff4d4d;
+            background-color: #ffe6e6;
+            border: 1px solid #ff9999;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
         form {
             display: flex;
             flex-direction: column;
@@ -77,6 +89,14 @@
 <body>
     <div class="emoji">✈️</div>
     <h1>Create Flight Calendar Event</h1>
+
+    <!-- Error message block -->
+    {% if error %}
+    <div class="error-message">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <p>Enter your flight number and date to create an iCal event.</p>
     <form action="/create_event" method="post">
         <label for="flight_number">Flight Number:</label>
@@ -98,4 +118,3 @@
     });
 </script>
 </body>
-</html>

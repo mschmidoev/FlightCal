@@ -23,6 +23,8 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
+            max-height: 70vh; /* Adjust the height as needed */
+            overflow-y: auto;
         }
         .card {
             display: flex;
@@ -93,6 +95,21 @@
         footer a:hover {
             text-decoration: underline;
         }
+    
+        @media (max-width: 600px) {
+            body {
+                height: auto;
+                padding: 20px;
+            }
+            .card-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -103,11 +120,10 @@
         <div class="card">
             <h2>{{ flight.flight_number }}</h2>
             <p>Airline: {{ flight.airline_name }}</p>
-            <p>Departure: {{ flight.scheduled_departure }}</p>
-            <p>Arrival: {{ flight.scheduled_arrival }}</p>
+            <p>Departure: {{ flight.nice_departure_date }}</p>
+            <p>Arrival: {{ flight.nice_arrival_date }}</p>
             <p>From: {{ flight.origin_airport_code }}</p>
             <p>To: {{ flight.destination_airport_code }}</p>
-            <!-- Move the form inside the card -->
             <form action="/create_event/{{ loop.index0 }}" method="post">
                 <input type="hidden" name="flight_number" value="{{ flight.flight_number }}">
                 <input type="hidden" name="flight_date" value="{{ flight.scheduled_departure }}">
@@ -128,4 +144,4 @@
         });
     </script>
 </body>
-</html></form>
+</html>

@@ -1,8 +1,9 @@
 import json
 import os
-import pandas as pd
 
+import pandas as pd
 from flask import Flask, render_template, request, send_file, session
+
 from core import get_flight, make_ics_from_selected_df_index
 
 app = Flask(__name__)
@@ -19,12 +20,18 @@ def index():
 
 @app.route("/create_event", methods=["POST"])
 def create_ical():
-    flight = request.form.get("flight_number")
-    date = request.form.get("flight_date")
-    df = get_flight(flight, date)
-    # Store the DataFrame as JSON in the session
-    session["df"] = df.to_json(orient="split")
-    return render_template("select_flight.html", flights=df.to_dict(orient="records"))
+    try:
+        flight = request.form.get("flight_number")
+        date = request.form.get("flight_date")
+        df = get_flight(flight, date)
+        # Store the DataFrame as JSON in the session
+        session["df"] = df.to_json(orient="split")
+        return render_template(
+            "select_flight.html", flights=df.to_dict(orient="records")
+        )
+    except Exception as e:
+        error_message = str(e)
+        return render_template("index.html", error=error_message)
 
 
 @app.route("/create_event/<int:index>", methods=["POST"])
