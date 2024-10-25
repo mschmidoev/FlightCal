@@ -64,19 +64,19 @@ def update_df_timezones(df: pd.DataFrame) -> pd.DataFrame:
         origin_tz = timezone(df.loc[i]["origin_timezone"])
         destination_tz = timezone(df.loc[i]["destination_timezone"])
 
-        # Convert scheduled departure and arrival from UK time to origin and destination timezones
-        uk_tz = timezone("Europe/London")
-        scheduled_departure_uk = uk_tz.localize(
+        # Convert scheduled departure and arrival from UTC time to origin and destination timezones
+        utc_tz = timezone("UTC")
+        scheduled_departure_utc = utc_tz.localize(
             datetime.strptime(df.loc[i]["scheduled_departure"], "%Y%m%d %H%M")
         )
-        scheduled_arrival_uk = uk_tz.localize(
+        scheduled_arrival_utc = utc_tz.localize(
             datetime.strptime(df.loc[i]["scheduled_arrival"], "%Y%m%d %H%M")
         )
 
-        df.at[i, "scheduled_departure"] = scheduled_departure_uk.astimezone(
+        df.at[i, "scheduled_departure"] = scheduled_departure_utc.astimezone(
             origin_tz
         ).strftime("%Y%m%d %H%M")
-        df.at[i, "scheduled_arrival"] = scheduled_arrival_uk.astimezone(
+        df.at[i, "scheduled_arrival"] = scheduled_arrival_utc.astimezone(
             destination_tz
         ).strftime("%Y%m%d %H%M")
     return df
