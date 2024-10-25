@@ -131,11 +131,15 @@ def parse_nice_datetime(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def parse_flight_number(flight_number: str) -> str:
-    match = re.match(r"([A-Z]+)([0-9]+)", flight_number.upper())
+    # Remove any non-alphanumeric characters and convert to uppercase
+    cleaned_flight_number = re.sub(r"[^A-Za-z0-9]", "", flight_number).upper()
+
+    # Match the cleaned flight number
+    match = re.match(r"([A-Z]+)([0-9]+)", cleaned_flight_number)
     if match:
         letters, numbers = match.groups()
         return letters + numbers.lstrip("0")
-    return flight_number
+    return flight_number.upper()
 
 
 def ics_to_bytes(ics: icalendar.Event) -> bytes:
