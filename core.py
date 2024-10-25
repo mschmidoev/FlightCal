@@ -37,10 +37,10 @@ def get_flight(flight_number: str, date: str) -> pd.DataFrame:
             [parse_flight_info(flight_info, i) for i in range(len(flight_info))]
         )
         df["is_guess"] = True
-        df = update_df_timezones(df)
-        df = parse_nice_datetime(df)
         for i in range(len(df)):
             df.loc[i] = move_flight_date(df.loc[i], date)
+        df = update_df_timezones(df)
+        df = parse_nice_datetime(df)
         return df
     else:
         if len(flight_info) > 1:
